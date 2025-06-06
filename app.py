@@ -67,6 +67,7 @@ class TwistedTicTacToeStreamlit:
         """Renders the initial screen for selecting game mode and twists."""
         st.title("Twisted Tic-Tac-Toe")
         st.header("Select Game Mode:")
+        st.header("By Nipun Jaggi")
 
         # Game Mode selection using radio buttons
         current_game_mode_index = 0 if st.session_state.game_mode == "friend" else 1
