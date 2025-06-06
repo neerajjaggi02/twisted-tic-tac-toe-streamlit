@@ -261,7 +261,7 @@ class TwistedTicTacToeStreamlit:
                     for c in range(BOARD_SIZE):
                         with board_row_cols[c]: # Place content within each column
                             mark_on_board = st.session_state.board[r][c]
-                            mark_display = mark_on_board
+                            mark_display = str(mark_on_board) # Ensure mark_display is a string from the start
                             
                             # Apply 'Evolve Tic-Tac-Toe' display logic
                             if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
@@ -272,8 +272,6 @@ class TwistedTicTacToeStreamlit:
                                     else:
                                         # Fallback if evolve_level is not an integer (e.g., None)
                                         mark_display += "" # Do not display level if type is wrong
-                                        # You might want to add a warning here for debugging:
-                                        # st.warning(f"Unexpected evolve_level type at ({r},{c}): {type(evolve_level)}")
 
 
                             # Apply 'Memory Challenge' visibility logic
@@ -285,17 +283,15 @@ class TwistedTicTacToeStreamlit:
                                 elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
                                     evolve_level = st.session_state.evolve_marks[(r,c)]
                                     if isinstance(evolve_level, int): # Defensive check
-                                        mark_display = mark_on_board + str(evolve_level)
+                                        mark_display = str(mark_on_board) + str(evolve_level)
                                     else:
                                         # Fallback if evolve_level is not an integer (e.g., None)
-                                        mark_display = mark_on_board # Display just the mark, no level
-                                        # You might want to add a warning here for debugging:
-                                        # st.warning(f"Unexpected evolve_level type at ({r},{c}): {type(evolve_level)}")
+                                        mark_display = str(mark_on_board) # Display just the mark, no level
 
 
                             # Ensure button has text, even if empty, to maintain size
                             # Explicitly cast to string to prevent any possible non-string type errors during f-string formatting
-                            final_button_text_content = str(mark_display) if mark_display else " "
+                            final_button_text_content = mark_display if mark_display else " "
                             
                             # Determine if the button should be disabled
                             button_disabled = not st.session_state.game_active # Disable if game not active
@@ -321,11 +317,23 @@ class TwistedTicTacToeStreamlit:
                             elif mark_on_board == PLAYER_O:
                                 mark_class = "o-mark"
 
-                            # Create the button with dynamic content and styling
-                            if st.button(f"<span class='{mark_class}'>{final_button_text_content}</span>", key=f"cell_{r}_{c}",
-                                         use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
-                                self._handle_click(r, c) # Handle the click event
-                                st.rerun() # Force a rerun to update the UI
+                            # Construct the HTML for the button label explicitly
+                            button_html_label = f"<span class='{mark_class}'>{final_button_text_content}</span>"
+
+                            try:
+                                if st.button(button_html_label, key=f"cell_{r}_{c}",
+                                             use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
+                                    self._handle_click(r, c) # Handle the click event
+                                    st.rerun() # Force a rerun to update the UI
+                            except Exception as e:
+                                st.error(f"Error rendering button at ({r},{c}): {e}")
+                                # Print more context to the console for debugging
+                                print(f"Error at button ({r},{c}): {e}")
+                                print(f"  mark_class: '{mark_class}'")
+                                print(f"  final_button_text_content: '{final_button_text_content}'")
+                                print(f"  button_html_label: '{button_html_label}'")
+                                print(f"  button_disabled: {button_disabled}")
+
 
     def _render_control_buttons(self):
         """Renders general game control buttons like 'Undo', 'Reset Game', and 'Change Twists'."""
@@ -355,6 +363,30 @@ class TwistedTicTacToeStreamlit:
                 self.set_current_screen("twist_selection") # Change screen
                 self._initialize_session_state() # Fully re-initialize all session state
                 st.rerun() # Force rerun
+
+    def _render_ability_buttons(self):
+        """Renders ability buttons (Swap, Block, Remove) if the 'Abilities' twist is active."""
+        if st.session_state.selected_twists["Tic-Tac-Toe with Abilities"]:
+            st.markdown("---")
+            st.subheader("Abilities:")
+            ability_cols = st.columns(3) # Create three columns for ability buttons
+            abilities_info = {
+                'swap': "Swap", 'block': "Block", 'remove': "Remove"
+            }
+            for i, (ability_type, btn_text) in enumerate(abilities_info.items()):
+                with ability_cols[i]:
+                    count = st.session_state.player_abilities[st.session_state.current_player][ability_type] # Get remaining uses
+                    button_label = f"{btn_text} ({count})"
+                    
+                    # Disable ability button if no uses left, game not active, or another ability is active
+                    button_disabled = (count <= 0 or not st.session_state.game_active or st.session_state.ability_mode is not None)
+                    # Disable human abilities during bot's turn
+                    if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
+                        button_disabled = True
+
+                    if st.button(button_label, key=f"ability_{ability_type}_btn", disabled=button_disabled):
+                        self._use_ability(ability_type) # Initiate ability use
+                        st.rerun() # Force rerun to update status and enable ability clicks
 
     def _reset_game(self):
         """Resets the entire application to the twist selection screen by re-initializing session state."""
