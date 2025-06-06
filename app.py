@@ -172,7 +172,7 @@ class TwistedTicTacToeStreamlit:
         if st.session_state.selected_twists["Sudden Death Tic-Tac-Toe"] and st.session_state.game_active:
             elapsed_time = time.time() - st.session_state.turn_start_time
             remaining_time = max(0, int(st.session_state.turn_time_limit - elapsed_time))
-            st.markdown(f"Time: {remaining_time}s")
+            st.markdown(f"**Time: {remaining_time}s**") # Make timer more prominent
             # Check for timeout and end game if time runs out
             if remaining_time <= 0 and st.session_state.game_active:
                 self._end_game(f"Player {st.session_state.current_player} ran out of time! Player {PLAYER_O if st.session_state.current_player == PLAYER_X else PLAYER_X} wins!")
@@ -193,91 +193,122 @@ class TwistedTicTacToeStreamlit:
             # Inject custom CSS for button styling (size, shape, colors)
             st.markdown("""
             <style>
-                /* Style for all Streamlit buttons */
+                /* General button styling */
                 .stButton > button {
-                    font-size: 3em !important; /* Make X/O marks larger */
-                    width: 100px; /* Fixed width for uniform cells */
-                    height: 100px; /* Fixed height for uniform cells */
+                    font-size: 3em; /* Make X/O marks larger */
+                    width: 100%; /* Occupy full column width */
+                    aspect-ratio: 1 / 1; /* Maintain square shape */
+                    max-width: 120px; /* Max size for larger screens */
                     border-radius: 10px; /* Rounded corners */
                     background-color: #ECEFF1; /* Light gray background */
                     color: #212121; /* Default dark gray text */
                     border: 2px solid #90A4AE; /* Border color */
-                    margin: 5px; /* Spacing between cells */
+                    margin: 2px; /* Smaller margin for tighter grid */
                     display: flex; /* Use flexbox for centering content */
                     justify-content: center; /* Center horizontally */
                     align-items: center; /* Center vertically */
                     cursor: pointer; /* Pointer cursor for clickable cells */
-                    transition: background-color 0.2s ease; /* Smooth hover effect */
+                    transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth hover and click effects */
+                    box-shadow: 2px 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
                 }
                 /* Hover effect for clickable buttons */
                 .stButton > button:hover:not(:disabled) {
                     background-color: #CFD8DC; /* Slightly darker gray on hover */
+                    transform: translateY(-2px); /* Slight lift on hover */
+                }
+                /* Active (clicked) state */
+                .stButton > button:active:not(:disabled) {
+                    transform: translateY(0); /* Press down effect */
+                    box-shadow: 1px 1px 3px rgba(0,0,0,0.2) inset; /* Inset shadow */
                 }
                 /* Style for disabled buttons */
                 .stButton > button:disabled {
                     opacity: 0.6; /* Dim disabled buttons */
                     cursor: not-allowed; /* No-go cursor */
+                    background-color: #E0E0E0; /* Slightly darker disabled background */
+                    color: #757575; /* Lighter text for disabled */
                 }
                 /* Specific colors for X and O marks */
                 .x-mark { color: #E91E63; } /* Red-ish for X */
                 .o-mark { color: #2196F3; } /* Blue-ish for O */
+
+                /* Style for ability buttons and control buttons */
+                .stButton > button[key*="ability_"], .stButton > button[key*="button_"] {
+                    font-size: 1.2em !important; /* Smaller font for control/ability buttons */
+                    max-width: none; /* Allow them to take more width */
+                    height: auto; /* Auto height based on content */
+                    padding: 10px 15px; /* Add padding */
+                }
+
+                /* Streamlit radio button and checkbox alignment */
+                div[data-baseweb="radio"], div[data-baseweb="checkbox"] {
+                    display: flex;
+                    align-items: center;
+                }
+                div[data-baseweb="radio"] label, div[data-baseweb="checkbox"] label {
+                    margin-right: 15px; /* Spacing between options */
+                }
             </style>
             """, unsafe_allow_html=True) # Allow Streamlit to render custom HTML/CSS
 
-            # Create a 3x3 grid using Streamlit columns
-            for r in range(BOARD_SIZE):
-                board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
-                for c in range(BOARD_SIZE):
-                    with board_row_cols[c]: # Place content within each column
-                        mark_on_board = st.session_state.board[r][c]
-                        mark_display = mark_on_board
-                        
-                        # Apply 'Evolve Tic-Tac-Toe' display logic
-                        if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
-                            if mark_on_board != EMPTY_CELL: # Only show level if a mark exists
-                                mark_display += str(st.session_state.evolve_marks[(r,c)])
+            # Center the board visually if possible by controlling its container width
+            # Streamlit columns are inherently responsive, this relies on that.
+            # Using st.columns for the board structure itself helps with responsiveness.
+            board_container_cols = st.columns([1, BOARD_SIZE, 1]) # Center board in middle column
+            with board_container_cols[1]: # Place board in the central column
+                for r in range(BOARD_SIZE):
+                    board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
+                    for c in range(BOARD_SIZE):
+                        with board_row_cols[c]: # Place content within each column
+                            mark_on_board = st.session_state.board[r][c]
+                            mark_display = mark_on_board
+                            
+                            # Apply 'Evolve Tic-Tac-Toe' display logic
+                            if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
+                                if mark_on_board != EMPTY_CELL: # Only show level if a mark exists
+                                    mark_display += str(st.session_state.evolve_marks[(r,c)])
 
-                        # Apply 'Memory Challenge' visibility logic
-                        if st.session_state.selected_twists["Memory Challenge"]:
-                            # If not set to reveal all and it's an opponent's mark, hide it
-                            if not st.session_state.reveal_all_memory_marks and mark_on_board != st.session_state.current_player:
-                                mark_display = "" # Hide opponent's mark
-                            # If it's the current player's mark and Evolve is on, ensure level is shown
-                            elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
-                                mark_display = mark_on_board + str(st.session_state.evolve_marks[(r,c)])
+                            # Apply 'Memory Challenge' visibility logic
+                            if st.session_state.selected_twists["Memory Challenge"]:
+                                # If not set to reveal all and it's an opponent's mark, hide it
+                                if not st.session_state.reveal_all_memory_marks and mark_on_board != st.session_state.current_player:
+                                    mark_display = "" # Hide opponent's mark
+                                # If it's the current player's mark and Evolve is on, ensure level is shown
+                                elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
+                                    mark_display = mark_on_board + str(st.session_state.evolve_marks[(r,c)])
 
-                        # Ensure button has text, even if empty, to maintain size
-                        button_text = mark_display if mark_display else " "
-                        
-                        # Determine if the button should be disabled
-                        button_disabled = not st.session_state.game_active # Disable if game not active
-                        # Disable human clicks during bot's turn
-                        if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
-                            button_disabled = True
-                        
-                        # Special handling for ability mode clicks: enable all cells temporarily
-                        if st.session_state.ability_mode:
-                            button_disabled = False # Enable clicks for ability selection
-                            # For swap, disable re-clicking the first chosen cell
-                            if st.session_state.ability_mode == 'swap' and st.session_state.swap_first_click == (r,c):
+                            # Ensure button has text, even if empty, to maintain size
+                            button_text = mark_display if mark_display else " "
+                            
+                            # Determine if the button should be disabled
+                            button_disabled = not st.session_state.game_active # Disable if game not active
+                            # Disable human clicks during bot's turn
+                            if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
                                 button_disabled = True
-                            # For remove, disable clicking an empty cell
-                            if st.session_state.ability_mode == 'remove' and st.session_state.board[r][c] == EMPTY_CELL:
-                                button_disabled = True
-                            # For block, any cell is valid, logic handles if no lines to block
+                            
+                            # Special handling for ability mode clicks: enable all cells temporarily
+                            if st.session_state.ability_mode:
+                                button_disabled = False # Enable clicks for ability selection
+                                # For swap, disable re-clicking the first chosen cell
+                                if st.session_state.ability_mode == 'swap' and st.session_state.swap_first_click == (r,c):
+                                    button_disabled = True
+                                # For remove, disable clicking an empty cell
+                                if st.session_state.ability_mode == 'remove' and st.session_state.board[r][c] == EMPTY_CELL:
+                                    button_disabled = True
+                                # For block, any cell is valid, logic handles if no lines to block
 
-                        # Apply color class based on player mark for styling
-                        mark_class = ""
-                        if mark_on_board == PLAYER_X:
-                            mark_class = "x-mark"
-                        elif mark_on_board == PLAYER_O:
-                            mark_class = "o-mark"
+                            # Apply color class based on player mark for styling
+                            mark_class = ""
+                            if mark_on_board == PLAYER_X:
+                                mark_class = "x-mark"
+                            elif mark_on_board == PLAYER_O:
+                                mark_class = "o-mark"
 
-                        # Create the button with dynamic content and styling
-                        if st.button(f"<span class='{mark_class}'>{button_text}</span>", key=f"cell_{r}_{c}",
-                                     use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
-                            self._handle_click(r, c) # Handle the click event
-                            st.rerun() # Force a rerun to update the UI
+                            # Create the button with dynamic content and styling
+                            if st.button(f"<span class='{mark_class}'>{button_text}</span>", key=f"cell_{r}_{c}",
+                                         use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
+                                self._handle_click(r, c) # Handle the click event
+                                st.rerun() # Force a rerun to update the UI
 
     def _render_control_buttons(self):
         """Renders general game control buttons like 'Undo', 'Reset Game', and 'Change Twists'."""
@@ -608,7 +639,7 @@ class TwistedTicTacToeStreamlit:
 
                 st.session_state.player_abilities[st.session_state.current_player]['swap'] -= 1 # Decrement ability use
                 st.session_state.game_message = "Marks swapped!"
-                performed_action = True # Indicate successful action
+                performed_action = True
 
         elif ability_type == 'block':
             st.session_state.player_abilities[st.session_state.current_player]['block'] -= 1
@@ -828,4 +859,3 @@ def app():
 
 if __name__ == "__main__":
     app()
-
