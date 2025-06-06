@@ -121,6 +121,7 @@ class TwistedTicTacToeStreamlit:
         st.session_state.game_message = f"Player {st.session_state.current_player}'s turn."
 
         if st.session_state.selected_twists["Sudden Death Tic-Tac-Toe"]:
+            st.session_state.turn_time_limit = 10 # Default to 10 seconds per turn
             st.session_state.turn_start_time = time.time() # Start timer for the first turn
         
         # If bot is enabled and it's Player O's turn (as X starts), flag for bot move
@@ -191,6 +192,9 @@ class TwistedTicTacToeStreamlit:
         """Renders the Tic-Tac-Toe board using Streamlit columns and buttons, applying custom CSS."""
         with st.container():
             # Inject custom CSS for button styling (size, shape, colors)
+            # NOTE: If your Streamlit version does not support unsafe_allow_html for st.button,
+            # the styling for X/O marks set here (x-mark, o-mark) will not apply to the buttons.
+            # However, other general button styles might still apply if compatible.
             st.markdown("""
             <style>
                 /* General button styling */
@@ -228,7 +232,7 @@ class TwistedTicTacToeStreamlit:
                     background-color: #E0E0E0; /* Slightly darker disabled background */
                     color: #757575; /* Lighter text for disabled */
                 }
-                /* Specific colors for X and O marks */
+                /* Specific colors for X and O marks (will not apply if unsafe_allow_html is not used for button content) */
                 .x-mark { color: #E91E63; } /* Red-ish for X */
                 .o-mark { color: #2196F3; } /* Blue-ish for O */
 
@@ -310,19 +314,19 @@ class TwistedTicTacToeStreamlit:
                                     button_disabled = True
                                 # For block, any cell is valid, logic handles if no lines to block
 
-                            # Apply color class based on player mark for styling
+                            # Apply color class based on player mark for styling (this will NOT apply if unsafe_allow_html is not used for button content)
                             mark_class = ""
                             if mark_on_board == PLAYER_X:
                                 mark_class = "x-mark"
                             elif mark_on_board == PLAYER_O:
                                 mark_class = "o-mark"
 
-                            # Construct the HTML for the button label explicitly
-                            button_html_label = f"<span class='{mark_class}'>{final_button_text_content}</span>"
+                            # Construct the button label. Removed <span> tags because unsafe_allow_html is not supported by older Streamlit versions for st.button.
+                            button_label = final_button_text_content
 
                             try:
-                                if st.button(button_html_label, key=f"cell_{r}_{c}",
-                                             use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
+                                if st.button(button_label, key=f"cell_{r}_{c}",
+                                             use_container_width=True, disabled=button_disabled): # unsafe_allow_html=True removed
                                     self._handle_click(r, c) # Handle the click event
                                     st.rerun() # Force a rerun to update the UI
                             except Exception as e:
@@ -331,7 +335,7 @@ class TwistedTicTacToeStreamlit:
                                 print(f"Error at button ({r},{c}): {e}")
                                 print(f"  mark_class: '{mark_class}'")
                                 print(f"  final_button_text_content: '{final_button_text_content}'")
-                                print(f"  button_html_label: '{button_html_label}'")
+                                print(f"  button_label: '{button_label}'")
                                 print(f"  button_disabled: {button_disabled}")
 
 
