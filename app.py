@@ -598,9 +598,9 @@ class TwistedTicTacToeStreamlit:
         # Display game over options
         st.subheader("Game Over!")
         st.write(message)
-       if "wins!" in message: # Check if the message indicates a win (e.g., "Player X wins!")
-            time.sleep(0.1) # Added sleep to help with animation rendering
-            st.balloons() # Trigger the balloon animation
+       if "wins!" in message:
+            time.sleep(0.1)
+            st.balloons()
         col1, col2 = st.columns(2) # Create two columns for buttons
         with col1:
             if st.button("Play Again", key="play_again_button_end", help="Start a new game with the same twists."):
