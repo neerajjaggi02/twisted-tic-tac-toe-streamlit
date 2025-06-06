@@ -274,8 +274,7 @@ class TwistedTicTacToeStreamlit:
                             mark_class = "o-mark"
 
                         # Create the button with dynamic content and styling
-                        if st.button(button_text, key=f"cell_{r}_{c}", use_container_width=True, disabled=button_disabled),
-                                     use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
+                        if st.button(button_text, key=f"cell_{r}_{c}", use_container_width=True, disabled=button_disabled):
                             self._handle_click(r, c) # Handle the click event
                             st.rerun() # Force a rerun to update the UI
 
