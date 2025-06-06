@@ -294,7 +294,8 @@ class TwistedTicTacToeStreamlit:
 
 
                             # Ensure button has text, even if empty, to maintain size
-                            button_text = mark_display if mark_display else " "
+                            # Explicitly cast to string to prevent any possible non-string type errors during f-string formatting
+                            final_button_text_content = str(mark_display) if mark_display else " "
                             
                             # Determine if the button should be disabled
                             button_disabled = not st.session_state.game_active # Disable if game not active
@@ -321,7 +322,7 @@ class TwistedTicTacToeStreamlit:
                                 mark_class = "o-mark"
 
                             # Create the button with dynamic content and styling
-                            if st.button(f"<span class='{mark_class}'>{button_text}</span>", key=f"cell_{r}_{c}",
+                            if st.button(f"<span class='{mark_class}'>{final_button_text_content}</span>", key=f"cell_{r}_{c}",
                                          use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
                                 self._handle_click(r, c) # Handle the click event
                                 st.rerun() # Force a rerun to update the UI
@@ -354,30 +355,6 @@ class TwistedTicTacToeStreamlit:
                 self.set_current_screen("twist_selection") # Change screen
                 self._initialize_session_state() # Fully re-initialize all session state
                 st.rerun() # Force rerun
-
-    def _render_ability_buttons(self):
-        """Renders ability buttons (Swap, Block, Remove) if the 'Abilities' twist is active."""
-        if st.session_state.selected_twists["Tic-Tac-Toe with Abilities"]:
-            st.markdown("---")
-            st.subheader("Abilities:")
-            ability_cols = st.columns(3) # Create three columns for ability buttons
-            abilities_info = {
-                'swap': "Swap", 'block': "Block", 'remove': "Remove"
-            }
-            for i, (ability_type, btn_text) in enumerate(abilities_info.items()):
-                with ability_cols[i]:
-                    count = st.session_state.player_abilities[st.session_state.current_player][ability_type] # Get remaining uses
-                    button_label = f"{btn_text} ({count})"
-                    
-                    # Disable ability button if no uses left, game not active, or another ability is active
-                    button_disabled = (count <= 0 or not st.session_state.game_active or st.session_state.ability_mode is not None)
-                    # Disable human abilities during bot's turn
-                    if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
-                        button_disabled = True
-
-                    if st.button(button_label, key=f"ability_{ability_type}_btn", disabled=button_disabled):
-                        self._use_ability(ability_type) # Initiate ability use
-                        st.rerun() # Force rerun to update status and enable ability clicks
 
     def _reset_game(self):
         """Resets the entire application to the twist selection screen by re-initializing session state."""
