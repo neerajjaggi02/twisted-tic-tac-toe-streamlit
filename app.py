@@ -8,7 +8,7 @@ PLAYER_X = 'X'
 PLAYER_O = 'O'
 EMPTY_CELL = ''
 BOARD_SIZE = 3
-
+ st.write("App is starting!")
 class TwistedTicTacToeStreamlit:
     def __init__(self):
         # Initialize session state variables only once per app load
