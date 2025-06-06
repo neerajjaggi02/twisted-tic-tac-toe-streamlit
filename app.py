@@ -196,15 +196,17 @@ class TwistedTicTacToeStreamlit:
             <style>
                 /* General button styling */
                 .stButton > button {
-                    font-size: 2.5em; /* Make X/O marks larger, adjusted for mobile */
+                    font-size: 2em; /* Slightly smaller font for better mobile fit */
                     width: 100%; /* Occupy full column width */
                     aspect-ratio: 1 / 1; /* Maintain square shape */
-                    max-width: 80px; /* Max size for mobile screens, adjusted */
+                    /* Removed max-width here to let columns dictate width more freely */
                     border-radius: 10px; /* Rounded corners */
                     background-color: #ECEFF1; /* Light gray background */
                     color: #212121; /* Default dark gray text */
                     border: 2px solid #90A4AE; /* Border color */
-                    margin: 2px; /* Smaller margin for tighter grid */
+                    margin: 1px; /* Even smaller margin for tighter grid */
+                    padding: 0; /* No internal padding for buttons themselves */
+                    box-sizing: border-box; /* Include padding and border in the element's total width and height */
                     display: flex; /* Use flexbox for centering content */
                     justify-content: center; /* Center horizontally */
                     align-items: center; /* Center vertically */
@@ -229,7 +231,7 @@ class TwistedTicTacToeStreamlit:
                     background-color: #E0E0E0; /* Slightly darker disabled background */
                     color: #757575; /* Lighter text for disabled */
                 }
-                /* Specific colors for X and O marks (will not apply if unsafe_allow_html is not used for button content) */
+                /* Specific colors for X and O marks */
                 .x-mark { color: #E91E63; } /* Red-ish for X */
                 .o-mark { color: #2196F3; } /* Blue-ish for O */
 
@@ -248,6 +250,29 @@ class TwistedTicTacToeStreamlit:
                 }
                 div[data-baseweb="radio"] label, div[data-baseweb="checkbox"] label {
                     margin-right: 15px; /* Spacing between options */
+                }
+
+                /* Targeting Streamlit columns to ensure equal distribution and minimal padding */
+                /* This targets the horizontal block that contains the three columns for a row */
+                div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
+                    display: flex;
+                    flex-direction: row; /* Ensure items are in a row */
+                    flex-wrap: nowrap; /* Prevent wrapping unless explicitly necessary */
+                    justify-content: space-around; /* Distribute space around items */
+                    align-items: center; /* Center items vertically */
+                    width: 100%; /* Ensure the row takes full width */
+                    margin: 0 !important; /* Remove any default margins */
+                    padding: 0 !important; /* Remove any default padding */
+                }
+                /* This targets the individual st.column elements within the row */
+                div[data-testid="stColumn"] {
+                    flex: 1 1 30%; /* Allow columns to grow/shrink, with a base of ~30% each */
+                    max-width: 33.33%; /* Ensure columns don't exceed 1/3 of the row */
+                    display: flex; /* Use flexbox for columns themselves */
+                    justify-content: center; /* Center content within each column */
+                    align-items: center; /* Align items vertically */
+                    padding: 0px !important; /* Extremely important: Remove any default padding inside columns */
+                    min-width: 0; /* Allow columns to shrink as much as needed */
                 }
             </style>
             """, unsafe_allow_html=True) # Allow Streamlit to render custom HTML/CSS
@@ -781,7 +806,7 @@ class TwistedTicTacToeStreamlit:
                     actual_r = self._get_gravity_placement(temp_board, c_iter)
                     if actual_r is None: # Column is full, skip this move
                         continue
-                    current_r = actual_r # The actual row where the mark would land
+                    current_r = actual_r
                 
                 if temp_board[current_r][current_c] == EMPTY_CELL:
                     # Make the move on the temporary board for simulation
