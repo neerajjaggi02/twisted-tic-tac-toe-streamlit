@@ -8,6 +8,7 @@ PLAYER_X = 'X'
 PLAYER_O = 'O'
 EMPTY_CELL = ''
 BOARD_SIZE = 3
+
 class TwistedTicTacToeStreamlit:
     def __init__(self):
         # Initialize session state variables only once per app load
@@ -192,43 +193,21 @@ class TwistedTicTacToeStreamlit:
             # Inject custom CSS for button styling (size, shape, colors)
             st.markdown("""
             <style>
-                /* Adjust overall container for the board to center it and limit max width on large screens */
-                .st-emotion-cache-1jm692z { /* Target for the main block container if needed */
-                    display: flex;
-                    justify-content: center;
-                }
-                .st-emotion-cache-1jm692z > div > div { /* Target for columns parent */
-                     max-width: 350px; /* Max width for the board itself */
-                     width: 90%; /* Occupy 90% of available width on smaller screens */
-                }
-
                 /* Style for all Streamlit buttons */
                 .stButton > button {
                     font-size: 3em !important; /* Make X/O marks larger */
-                    width: 100%; /* Make button fill its column */
-                    padding-top: 100%; /* Create a square button using padding-top hack */
-                    position: relative; /* For absolute positioning of content */
+                    width: 100px; /* Fixed width for uniform cells */
+                    height: 100px; /* Fixed height for uniform cells */
                     border-radius: 10px; /* Rounded corners */
                     background-color: #ECEFF1; /* Light gray background */
                     color: #212121; /* Default dark gray text */
                     border: 2px solid #90A4AE; /* Border color */
-                    margin: 2px; /* Reduced spacing between cells for tighter grid */
+                    margin: 5px; /* Spacing between cells */
                     display: flex; /* Use flexbox for centering content */
                     justify-content: center; /* Center horizontally */
                     align-items: center; /* Center vertically */
                     cursor: pointer; /* Pointer cursor for clickable cells */
                     transition: background-color 0.2s ease; /* Smooth hover effect */
-                }
-                /* Content within the button (X/O) */
-                .stButton > button > div {
-                    position: absolute; /* Position text absolutely within the button */
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
                 }
                 /* Hover effect for clickable buttons */
                 .stButton > button:hover:not(:disabled) {
@@ -242,86 +221,67 @@ class TwistedTicTacToeStreamlit:
                 /* Specific colors for X and O marks */
                 .x-mark { color: #E91E63; } /* Red-ish for X */
                 .o-mark { color: #2196F3; } /* Blue-ish for O */
-
-                /* Adjust font size on smaller screens */
-                @media (max-width: 600px) {
-                    .stButton > button {
-                        font-size: 2.5em !important;
-                    }
-                }
-                @media (max-width: 400px) {
-                    .stButton > button {
-                        font-size: 2em !important;
-                    }
-                }
-
             </style>
             """, unsafe_allow_html=True) # Allow Streamlit to render custom HTML/CSS
 
             # Create a 3x3 grid using Streamlit columns
-            # Using st.columns with no explicit width distributes space evenly.
-            # We add a container around for better centering control via CSS.
-            board_container = st.container()
-            with board_container:
-                for r in range(BOARD_SIZE):
-                    board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
-                    for c in range(BOARD_SIZE):
-                        with board_row_cols[c]: # Place content within each column
-                            mark_on_board = st.session_state.board[r][c]
-                            mark_display = mark_on_board
-                            
-                            # Apply 'Evolve Tic-Tac-Toe' display logic
-                            if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
-                                if mark_on_board != EMPTY_CELL: # Only show level if a mark exists
-                                    mark_display += str(st.session_state.evolve_marks[(r,c)])
+            for r in range(BOARD_SIZE):
+                board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
+                for c in range(BOARD_SIZE):
+                    with board_row_cols[c]: # Place content within each column
+                        mark_on_board = st.session_state.board[r][c]
+                        mark_display = mark_on_board
+                        
+                        # Apply 'Evolve Tic-Tac-Toe' display logic
+                        if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
+                            if mark_on_board != EMPTY_CELL: # Only show level if a mark exists
+                                mark_display += str(st.session_state.evolve_marks[(r,c)])
 
-                            # Apply 'Memory Challenge' visibility logic
-                            if st.session_state.selected_twists["Memory Challenge"]:
-                                # If not set to reveal all and it's an opponent's mark, hide it
-                                if not st.session_state.reveal_all_memory_marks and mark_on_board != st.session_state.current_player:
-                                    mark_display = "" # Hide opponent's mark
-                                # If it's the current player's mark and Evolve is on, ensure level is shown
-                                elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
-                                    mark_display = mark_on_board + str(st.session_state.evolve_marks[(r,c)])
+                        # Apply 'Memory Challenge' visibility logic
+                        if st.session_state.selected_twists["Memory Challenge"]:
+                            # If not set to reveal all and it's an opponent's mark, hide it
+                            if not st.session_state.reveal_all_memory_marks and mark_on_board != st.session_state.current_player:
+                                mark_display = "" # Hide opponent's mark
+                            # If it's the current player's mark and Evolve is on, ensure level is shown
+                            elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
+                                mark_display = mark_on_board + str(st.session_state.evolve_marks[(r,c)])
 
-                            # Ensure button has text, even if empty, to maintain size
-                            button_text = mark_display if mark_display else " "
-                            
-                            # Determine if the button should be disabled
-                            button_disabled = not st.session_state.game_active # Disable if game not active
-                            # Disable human clicks during bot's turn
-                            if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
+                        # Ensure button has text, even if empty, to maintain size
+                        button_text = mark_display if mark_display else " "
+                        
+                        # Determine if the button should be disabled
+                        button_disabled = not st.session_state.game_active # Disable if game not active
+                        # Disable human clicks during bot's turn
+                        if st.session_state.bot_enabled and st.session_state.current_player == PLAYER_O:
+                            button_disabled = True
+                        
+                        # Special handling for ability mode clicks: enable all cells temporarily
+                        if st.session_state.ability_mode:
+                            button_disabled = False # Enable clicks for ability selection
+                            # For swap, disable re-clicking the first chosen cell
+                            if st.session_state.ability_mode == 'swap' and st.session_state.swap_first_click == (r,c):
                                 button_disabled = True
-                            
-                            # Special handling for ability mode clicks: enable all cells temporarily
-                            if st.session_state.ability_mode:
-                                button_disabled = False # Enable clicks for ability selection
-                                # For swap, disable re-clicking the first chosen cell
-                                if st.session_state.ability_mode == 'swap' and st.session_state.swap_first_click == (r,c):
-                                    button_disabled = True
-                                # For remove, disable clicking an empty cell
-                                if st.session_state.ability_mode == 'remove' and st.session_state.board[r][c] == EMPTY_CELL:
-                                    button_disabled = True
-                                # For block, any cell is valid, logic handles if no lines to block
+                            # For remove, disable clicking an empty cell
+                            if st.session_state.ability_mode == 'remove' and st.session_state.board[r][c] == EMPTY_CELL:
+                                button_disabled = True
+                            # For block, any cell is valid, logic handles if no lines to block
 
-                            # Apply color class based on player mark for styling
-                            mark_class = ""
-                            if mark_on_board == PLAYER_X:
-                                mark_class = "x-mark"
-                            elif mark_on_board == PLAYER_O:
-                                mark_class = "o-mark"
+                        # Apply color class based on player mark for styling
+                        mark_class = ""
+                        if mark_on_board == PLAYER_X:
+                            mark_class = "x-mark"
+                        elif mark_on_board == PLAYER_O:
+                            mark_class = "o-mark"
 
-                            # Corrected line: Explicitly pass label as a keyword argument
-                            if st.button(label=f"<span class='{mark_class}'>{button_text}</span>", key=f"cell_{r}_{c}",
-                                         use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
-                                self._handle_click(r, c) # Handle the click event
-                                st.rerun() # Force a rerun to update the UI
+                        # Create the button with dynamic content and styling
+                        if st.button(f"<span class='{mark_class}'>{button_text}</span>", key=f"cell_{r}_{c}",
+                                     use_container_width=True, disabled=button_disabled, unsafe_allow_html=True):
+                            self._handle_click(r, c) # Handle the click event
+                            st.rerun() # Force a rerun to update the UI
 
     def _render_control_buttons(self):
         """Renders general game control buttons like 'Undo', 'Reset Game', and 'Change Twists'."""
         st.markdown("---")
-        # Use st.columns with explicit widths to make buttons roughly equal size,
-        # and Streamlit will handle stacking on smaller screens.
         control_cols = st.columns(3) # Create three columns for the buttons
         with control_cols[0]:
             # 'Tic-Tac-Undo' button logic
@@ -535,4 +495,337 @@ class TwistedTicTacToeStreamlit:
                 if set(line) == set(st.session_state.blocked_line):
                     st.session_state.game_message = f"Player {player}'s winning line was blocked!"
                     st.session_state.blocked_line = None # Clear the block after it's used
-                    return False
+                    return False # No win this turn due to block
+        
+        return len(winning_lines_found) > 0 # Return True if any valid winning line exists
+
+    def _check_draw(self, board_state):
+        """Checks if the game is a draw on a given board state (no empty cells)."""
+        for r in range(BOARD_SIZE):
+            for c in range(BOARD_SIZE):
+                if board_state[r][c] == EMPTY_CELL:
+                    return False # Found an empty spot, not a draw yet
+        return True # Board is full, it's a draw
+
+    def _end_game(self, message):
+        """Ends the game, displays a final message, and provides options to play again or change twists."""
+        st.session_state.game_active = False # Deactivate the game
+        st.session_state.game_message = message # Set final message
+        st.session_state.ability_mode = None # Clear any active ability mode
+        st.session_state.swap_first_click = None # Clear any pending swap selections
+        st.session_state.reveal_all_memory_marks = True # Reveal all marks at game end for full view
+        st.session_state.bot_move_pending = False # Stop any pending bot moves
+
+        # Display game over options
+        st.subheader("Game Over!")
+        st.write(message)
+        col1, col2 = st.columns(2) # Create two columns for buttons
+        with col1:
+            if st.button("Play Again", key="play_again_button_end", help="Start a new game with the same twists."):
+                self._reset_game_state_for_new_game() # Reset game state
+                st.rerun() # Force rerun
+        with col2:
+            if st.button("Change Twists", key="change_twists_button_end", help="Go back to the twist selection screen."):
+                self.set_current_screen("twist_selection") # Change screen
+                self._initialize_session_state() # Fully reset all session state
+                st.rerun() # Force rerun
+
+    def _switch_player(self):
+        """Switches the current player and resets the turn timer for 'Sudden Death'."""
+        st.session_state.current_player = PLAYER_O if st.session_state.current_player == PLAYER_X else PLAYER_X
+        st.session_state.game_message = f"Player {st.session_state.current_player}'s turn."
+        if st.session_state.selected_twists["Sudden Death Tic-Tac-Toe"]:
+            st.session_state.turn_start_time = time.time() # Reset timer for the new player
+
+    # --- 'Board Shift' Twist Implementation ---
+    def _shift_board(self):
+        """Shifts the board content (rows move up, top row is lost, new empty row at bottom)."""
+        st.session_state.game_message = "The board is shifting!" # This message will be appended
+        new_board = [[EMPTY_CELL for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        new_evolve_marks = {} # Also shift evolve marks accordingly
+
+        # Shift all rows up by one. The top row is lost, and a new empty row appears at the bottom.
+        for r in range(1, BOARD_SIZE): # Start from the second row (index 1)
+            for c in range(BOARD_SIZE):
+                new_board[r-1][c] = st.session_state.board[r][c] # Move current row 'r' to 'r-1'
+                if (r,c) in st.session_state.evolve_marks:
+                    new_evolve_marks[(r-1,c)] = st.session_state.evolve_marks[(r,c)] # Move evolve mark
+
+        st.session_state.board = new_board # Update the main board
+        st.session_state.evolve_marks = new_evolve_marks # Update evolve marks
+        # Streamlit will automatically re-render the board on the next rerun
+
+    # --- 'Abilities' Twist Implementation ---
+    def _use_ability(self, ability_type):
+        """Initiates the use of a player ability (e.g., 'swap', 'block', 'remove')."""
+        if st.session_state.player_abilities[st.session_state.current_player][ability_type] <= 0:
+            st.session_state.game_message = "You don't have any uses left for this ability!"
+            return
+
+        st.session_state.ability_mode = ability_type # Set the active ability mode
+        st.session_state.game_message = f"Ability Mode: Click on the board to use '{ability_type.capitalize()}' ability!"
+        
+        # If 'Memory Challenge' is active, reveal all marks for strategic ability use
+        if st.session_state.selected_twists["Memory Challenge"]:
+            st.session_state.reveal_all_memory_marks = True
+
+    def _handle_ability_click(self, r, c):
+        """Handles a click on the board when an ability is active."""
+        ability_type = st.session_state.ability_mode
+        performed_action = False # Flag to indicate if an ability action was successfully performed
+
+        if ability_type == 'swap':
+            if st.session_state.swap_first_click is None:
+                st.session_state.swap_first_click = (r, c) # Store the first clicked cell
+                st.session_state.game_message = f"Swap: Select second cell to swap with ({r+1},{c+1})."
+            else:
+                r1, c1 = st.session_state.swap_first_click
+                r2, c2 = (r, c)
+
+                if (r1, c1) == (r2, c2):
+                    st.session_state.game_message = "Cannot swap a cell with itself!"
+                    self._reset_ability_mode() # Reset ability mode and exit
+                    return
+
+                # Store current state in history before performing the swap
+                history_entry = (copy.deepcopy(st.session_state.board), copy.deepcopy(st.session_state.evolve_marks))
+                st.session_state.board_history.append(history_entry)
+
+                # Perform the actual swap of marks and evolve levels
+                temp_mark = st.session_state.board[r1][c1]
+                temp_evolve = st.session_state.evolve_marks.get((r1,c1), None)
+
+                st.session_state.board[r1][c1] = st.session_state.board[r2][c2]
+                st.session_state.evolve_marks[(r1,c1)] = st.session_state.evolve_marks.get((r2,c2), None)
+                # Clean up evolve_marks if a cell becomes empty or loses its evolve status
+                if (r1,c1) in st.session_state.evolve_marks and st.session_state.evolve_marks[(r1,c1)] is None:
+                    del st.session_state.evolve_marks[(r1,c1)]
+
+                st.session_state.board[r2][c2] = temp_mark
+                st.session_state.evolve_marks[(r2,c2)] = temp_evolve
+                if (r2,c2) in st.session_state.evolve_marks and st.session_state.evolve_marks[(r2,c2)] is None:
+                    del st.session_state.evolve_marks[(r2,c2)]
+
+                st.session_state.player_abilities[st.session_state.current_player]['swap'] -= 1 # Decrement ability use
+                st.session_state.game_message = "Marks swapped!"
+                performed_action = True # Indicate successful action
+
+        elif ability_type == 'block':
+            st.session_state.player_abilities[st.session_state.current_player]['block'] -= 1
+            opponent = PLAYER_O if st.session_state.current_player == PLAYER_X else PLAYER_X
+            potential_lines = self._get_all_potential_winning_lines(opponent) # Get all potential winning lines for opponent
+            if potential_lines:
+                st.session_state.blocked_line = random.choice(potential_lines) # Randomly block one line
+                st.session_state.game_message = f"Player {st.session_state.current_player} blocked a random line for the next turn!"
+            else:
+                st.session_state.game_message = f"Player {st.session_state.current_player} used Block, but no immediate lines to block."
+            performed_action = True
+
+        elif ability_type == 'remove':
+            if st.session_state.board[r][c] != EMPTY_CELL: # Can only remove a non-empty spot
+                # Store current state in history before performing removal
+                history_entry = (copy.deepcopy(st.session_state.board), copy.deepcopy(st.session_state.evolve_marks))
+                st.session_state.board_history.append(history_entry)
+
+                original_owner = st.session_state.board[r][c]
+                st.session_state.board[r][c] = EMPTY_CELL # Remove the mark
+                # Remove evolve mark data if it exists
+                if (r,c) in st.session_state.evolve_marks:
+                    del st.session_state.evolve_marks[(r,c)]
+                st.session_state.player_abilities[st.session_state.current_player]['remove'] -= 1 # Decrement ability use
+                st.session_state.game_message = f"Mark of player {original_owner} at ({r+1},{c+1}) removed!"
+                performed_action = True
+            else:
+                st.session_state.game_message = "Cannot remove an empty spot!"
+                # performed_action remains False, so turn will not switch
+
+        if performed_action:
+            self._reset_ability_mode() # Reset ability mode
+            self._switch_player_and_end_turn_actions() # Switch player and handle end-turn actions
+        else:
+            self._reset_ability_mode() # If no action (e.g., clicked empty for remove), still reset mode
+        st.rerun() # Force a rerun to update the UI
+
+    def _reset_ability_mode(self):
+        """Resets the active ability mode and related temporary states."""
+        st.session_state.ability_mode = None
+        st.session_state.swap_first_click = None
+        # If 'Memory Challenge' is active, hide opponent's marks when ability mode ends
+        if st.session_state.selected_twists["Memory Challenge"]:
+            st.session_state.reveal_all_memory_marks = False
+
+    def _get_all_potential_winning_lines(self, player):
+        """Helper function to get all possible 3-in-a-row lines on the board."""
+        lines = []
+        # Rows
+        for r in range(BOARD_SIZE):
+            lines.append(((r,0),(r,1),(r,2)))
+        # Columns
+        for c in range(BOARD_SIZE):
+            lines.append(((0,c),(1,c),(2,c)))
+        # Diagonals
+        lines.append(((0,0),(1,1),(2,2)))
+        lines.append(((0,2),(1,1),(2,0)))
+        return lines
+
+    # --- Bot Logic Implementation ---
+    def _bot_move(self):
+        """Determines and executes the bot's move based on difficulty."""
+        if not st.session_state.game_active:
+            return
+
+        # Temporarily reveal all marks for the bot's internal decision making
+        original_reveal_state = st.session_state.reveal_all_memory_marks
+        st.session_state.reveal_all_memory_marks = True # Bot needs to see the full board
+
+        # Store current board state in history before bot makes its move (for undo)
+        history_entry = (copy.deepcopy(st.session_state.board), copy.deepcopy(st.session_state.evolve_marks))
+        st.session_state.board_history.append(history_entry)
+
+        if st.session_state.bot_difficulty == "basic":
+            self._basic_bot_move()
+        else: # Smart Bot
+            self._smart_bot_move()
+        
+        # Restore the original memory challenge reveal state after the bot's turn
+        st.session_state.reveal_all_memory_marks = original_reveal_state
+
+    def _basic_bot_move(self):
+        """Basic bot logic: chooses a random empty cell."""
+        available = [(r, c) for r in range(BOARD_SIZE) for c in range(BOARD_SIZE) if st.session_state.board[r][c] == EMPTY_CELL]
+        if available:
+            if st.session_state.selected_twists["Gravity Tic-Tac-Toe"]:
+                valid_gravity_moves = []
+                for _, c in available: # Iterate columns to find valid gravity placements
+                    actual_r = self._get_gravity_placement(st.session_state.board, c)
+                    if actual_r is not None and (actual_r, c) not in valid_gravity_moves:
+                        valid_gravity_moves.append((actual_r, c))
+                
+                if valid_gravity_moves:
+                    r, c = random.choice(valid_gravity_moves)
+                    self._place_mark(r, c)
+                else:
+                    st.session_state.game_message = "Basic bot couldn't find a gravity move. (Unexpected state if spots are available)"
+            else:
+                r, c = random.choice(available)
+                self._place_mark(r, c)
+
+    def _smart_bot_move(self):
+        """Smart bot logic: uses Minimax algorithm to find the optimal move."""
+        best_score = -float('inf')
+        move = None
+        
+        # Iterate through all possible cells to find the best move
+        for r_iter in range(BOARD_SIZE):
+            for c_iter in range(BOARD_SIZE):
+                # Create deep copies of board state for minimax simulation
+                temp_board = copy.deepcopy(st.session_state.board)
+                temp_evolve_marks = copy.deepcopy(st.session_state.evolve_marks)
+                
+                current_r, current_c = r_iter, c_iter
+                # Apply 'Gravity Tic-Tac-Toe' for minimax consideration
+                if st.session_state.selected_twists["Gravity Tic-Tac-Toe"]:
+                    actual_r = self._get_gravity_placement(temp_board, c_iter)
+                    if actual_r is None: # Column is full, skip this move
+                        continue
+                    current_r = actual_r # The actual row where the mark would land
+                
+                if temp_board[current_r][current_c] == EMPTY_CELL:
+                    # Make the move on the temporary board for simulation
+                    temp_board[current_r][current_c] = PLAYER_O # Bot's move
+                    if st.session_state.selected_twists["Evolve Tic-Tac-Toe"]:
+                        temp_evolve_marks[(current_r, current_c)] = temp_evolve_marks.get((current_r, current_c), 0) + 1
+
+                    # Call minimax to evaluate this move. `False` indicates it's now Minimizing Player's turn (Human 'X')
+                    score = self._minimax(temp_board, temp_evolve_marks, 0, False)
+                    
+                    if score > best_score:
+                        best_score = score
+                        move = (current_r, current_c) # Store the best move found so far
+        
+        if move:
+            self._place_mark(*move) # Execute the best move
+        else:
+            # Fallback to basic bot if smart bot can't find an optimal move (e.g., board full)
+            st.session_state.game_message = "Smart bot found no optimal moves, making a random move."
+            self._basic_bot_move()
+
+    def _minimax(self, board_state, evolve_marks_state, depth, is_max):
+        """
+        Minimax algorithm to find the best move for the bot.
+        This function operates on *passed* board_state and evolve_marks_state,
+        ensuring it doesn't modify the main game's session_state during simulation.
+        """
+        # Base cases: Check for win/draw on the current simulated board state
+        if self._check_win(board_state, evolve_marks_state, PLAYER_O): # If O wins in this state
+            return 1 # Maximize score for O
+        if self._check_win(board_state, evolve_marks_state, PLAYER_X): # If X wins in this state
+            return -1 # Minimize score for O
+        if self._check_draw(board_state): # If it's a draw
+            return 0 # Neutral score
+
+        # Limit search depth to prevent excessive computation, especially in a web environment
+        if depth >= 5: # Tunable depth limit (deeper means smarter but slower)
+            return 0 # Return neutral score if depth limit is reached
+
+        if is_max: # Maximizing player (Bot 'O')
+            best = -float('inf') # Initialize with negative infinity
+            for r_iter in range(BOARD_SIZE):
+                for c_iter in range(BOARD_SIZE):
+                    temp_board = copy.deepcopy(board_state) # Create a new temporary board for simulation
+                    temp_evolve_marks = copy.deepcopy(evolve_marks_state)
+
+                    current_r, current_c = r_iter, c_iter
+                    # Apply 'Gravity Tic-Tac-Toe' for minimax consideration
+                    if st.session_state.selected_twists["Gravity Tic-Tac-Toe"]:
+                        actual_r = self._get_gravity_placement(temp_board, c_iter)
+                        if actual_r is None: # Column is full, skip this potential move
+                            continue
+                        current_r = actual_r
+
+                    if temp_board[current_r][current_c] == EMPTY_CELL:
+                        temp_board[current_r][current_c] = PLAYER_O # Make the move
+                        if st.session_state.selected_twists["Evolve Tic-Tac-Toe"]:
+                            temp_evolve_marks[(current_r, c_iter)] = temp_evolve_marks.get((current_r, c_iter), 0) + 1
+                        
+                        # Recursively call minimax for the next player (Minimizing)
+                        best = max(best, self._minimax(temp_board, temp_evolve_marks, depth + 1, False))
+            return best
+        else: # Minimizing player (Human 'X')
+            best = float('inf') # Initialize with positive infinity
+            for r_iter in range(BOARD_SIZE):
+                for c_iter in range(BOARD_SIZE):
+                    temp_board = copy.deepcopy(board_state)
+                    temp_evolve_marks = copy.deepcopy(evolve_marks_state)
+
+                    current_r, current_c = r_iter, c_iter
+                    if st.session_state.selected_twists["Gravity Tic-Tac-Toe"]:
+                        actual_r = self._get_gravity_placement(temp_board, c_iter)
+                        if actual_r is None:
+                            continue
+                        current_r = actual_r
+
+                    if temp_board[current_r][current_c] == EMPTY_CELL:
+                        temp_board[current_r][c_iter] = PLAYER_X # Make the move
+                        if st.session_state.selected_twists["Evolve Tic-Tac-Toe"]:
+                            temp_evolve_marks[(current_r, c_iter)] = temp_evolve_marks.get((current_r, c_iter), 0) + 1
+                        
+                        # Recursively call minimax for the next player (Maximizing)
+                        best = min(best, self._minimax(temp_board, temp_evolve_marks, depth + 1, True))
+            return best
+
+# Main Streamlit application entry point
+def app():
+    # Create an instance of the game logic class.
+    # This will also ensure st.session_state is initialized.
+    game = TwistedTicTacToeStreamlit()
+
+    # Route to the appropriate screen based on session state
+    if st.session_state.current_screen == "twist_selection":
+        game.display_twist_selection_screen()
+    elif st.session_state.current_screen == "game_board":
+        game.display_game_board_screen()
+
+if __name__ == "__main__":
+    app()
+
