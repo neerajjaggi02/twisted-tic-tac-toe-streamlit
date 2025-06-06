@@ -199,10 +199,10 @@ class TwistedTicTacToeStreamlit:
             <style>
                 /* General button styling */
                 .stButton > button {
-                    font-size: 3em; /* Make X/O marks larger */
+                    font-size: 2.5em; /* Make X/O marks larger, adjusted for mobile */
                     width: 100%; /* Occupy full column width */
                     aspect-ratio: 1 / 1; /* Maintain square shape */
-                    max-width: 120px; /* Max size for larger screens */
+                    max-width: 80px; /* Max size for mobile screens, adjusted */
                     border-radius: 10px; /* Rounded corners */
                     background-color: #ECEFF1; /* Light gray background */
                     color: #212121; /* Default dark gray text */
