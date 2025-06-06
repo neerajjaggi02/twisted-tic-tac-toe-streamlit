@@ -266,7 +266,15 @@ class TwistedTicTacToeStreamlit:
                             # Apply 'Evolve Tic-Tac-Toe' display logic
                             if st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
                                 if mark_on_board != EMPTY_CELL: # Only show level if a mark exists
-                                    mark_display += str(st.session_state.evolve_marks[(r,c)])
+                                    evolve_level = st.session_state.evolve_marks[(r,c)]
+                                    if isinstance(evolve_level, int): # Defensive check
+                                        mark_display += str(evolve_level)
+                                    else:
+                                        # Fallback if evolve_level is not an integer (e.g., None)
+                                        mark_display += "" # Do not display level if type is wrong
+                                        # You might want to add a warning here for debugging:
+                                        # st.warning(f"Unexpected evolve_level type at ({r},{c}): {type(evolve_level)}")
+
 
                             # Apply 'Memory Challenge' visibility logic
                             if st.session_state.selected_twists["Memory Challenge"]:
@@ -275,7 +283,15 @@ class TwistedTicTacToeStreamlit:
                                     mark_display = "" # Hide opponent's mark
                                 # If it's the current player's mark and Evolve is on, ensure level is shown
                                 elif mark_on_board == st.session_state.current_player and st.session_state.selected_twists["Evolve Tic-Tac-Toe"] and (r,c) in st.session_state.evolve_marks:
-                                    mark_display = mark_on_board + str(st.session_state.evolve_marks[(r,c)])
+                                    evolve_level = st.session_state.evolve_marks[(r,c)]
+                                    if isinstance(evolve_level, int): # Defensive check
+                                        mark_display = mark_on_board + str(evolve_level)
+                                    else:
+                                        # Fallback if evolve_level is not an integer (e.g., None)
+                                        mark_display = mark_on_board # Display just the mark, no level
+                                        # You might want to add a warning here for debugging:
+                                        # st.warning(f"Unexpected evolve_level type at ({r},{c}): {type(evolve_level)}")
+
 
                             # Ensure button has text, even if empty, to maintain size
                             button_text = mark_display if mark_display else " "
@@ -759,7 +775,7 @@ class TwistedTicTacToeStreamlit:
                     actual_r = self._get_gravity_placement(temp_board, c_iter)
                     if actual_r is None: # Column is full, skip this move
                         continue
-                    current_r = actual_r # The actual row where the mark would land
+                    current_r = actual_r
                 
                 if temp_board[current_r][current_c] == EMPTY_CELL:
                     # Make the move on the temporary board for simulation
@@ -836,7 +852,7 @@ class TwistedTicTacToeStreamlit:
                             continue
                         current_r = actual_r
 
-                    if temp_board[current_r][current_c] == EMPTY_CELL:
+                    if temp_board[current_r][c_iter] == EMPTY_CELL:
                         temp_board[current_r][c_iter] = PLAYER_X # Make the move
                         if st.session_state.selected_twists["Evolve Tic-Tac-Toe"]:
                             temp_evolve_marks[(current_r, c_iter)] = temp_evolve_marks.get((current_r, c_iter), 0) + 1
