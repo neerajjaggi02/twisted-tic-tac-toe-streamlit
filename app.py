@@ -66,6 +66,7 @@ class TwistedTicTacToeStreamlit:
     def display_twist_selection_screen(self):
         """Renders the initial screen for selecting game mode and twists."""
         st.title("Twisted Tic-Tac-Toe")
+        st.title("By Jaggi")
         st.header("Select Game Mode:")
 
         # Game Mode selection using radio buttons
