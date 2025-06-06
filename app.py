@@ -223,7 +223,7 @@ class TwistedTicTacToeStreamlit:
                 /* Active (clicked) state */
                 .stButton > button:active:not(:disabled) {
                     transform: translateY(0); /* Press down effect */
-                    box-shadow: 1px 1px 3px rgba(0,0,0,0.2) inset; /* Inset shadow */
+                    box_shadow: 1px 1px 3px rgba(0,0,0,0.2) inset; /* Inset shadow */
                 }
                 /* Style for disabled buttons */
                 .stButton > button:disabled {
@@ -255,15 +255,11 @@ class TwistedTicTacToeStreamlit:
             </style>
             """, unsafe_allow_html=True) # Allow Streamlit to render custom HTML/CSS
 
-            # Center the board visually if possible by controlling its container width
-            # Streamlit columns are inherently responsive, this relies on that.
-            # Using st.columns for the board structure itself helps with responsiveness.
-            board_container_cols = st.columns([1, BOARD_SIZE, 1]) # Center board in middle column
-            with board_container_cols[1]: # Place board in the central column
-                for r in range(BOARD_SIZE):
-                    board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
-                    for c in range(BOARD_SIZE):
-                        with board_row_cols[c]: # Place content within each column
+            # Removed the outermost st.columns to fix nesting error
+            for r in range(BOARD_SIZE):
+                board_row_cols = st.columns(BOARD_SIZE) # Create columns for each row
+                for c in range(BOARD_SIZE):
+                    with board_row_cols[c]: # Place content within each column
                             mark_on_board = st.session_state.board[r][c]
                             mark_display = str(mark_on_board) # Ensure mark_display is a string from the start
                             
