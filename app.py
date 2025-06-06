@@ -192,9 +192,6 @@ class TwistedTicTacToeStreamlit:
         """Renders the Tic-Tac-Toe board using Streamlit columns and buttons, applying custom CSS."""
         with st.container():
             # Inject custom CSS for button styling (size, shape, colors)
-            # NOTE: If your Streamlit version does not support unsafe_allow_html for st.button,
-            # the styling for X/O marks set here (x-mark, o-mark) will not apply to the buttons.
-            # However, other general button styles might still apply if compatible.
             st.markdown("""
             <style>
                 /* General button styling */
@@ -223,7 +220,7 @@ class TwistedTicTacToeStreamlit:
                 /* Active (clicked) state */
                 .stButton > button:active:not(:disabled) {
                     transform: translateY(0); /* Press down effect */
-                    box_shadow: 1px 1px 3px rgba(0,0,0,0.2) inset; /* Inset shadow */
+                    box-shadow: 1px 1px 3px rgba(0,0,0,0.2) inset; /* Inset shadow */
                 }
                 /* Style for disabled buttons */
                 .stButton > button:disabled {
@@ -784,7 +781,7 @@ class TwistedTicTacToeStreamlit:
                     actual_r = self._get_gravity_placement(temp_board, c_iter)
                     if actual_r is None: # Column is full, skip this move
                         continue
-                    current_r = actual_r
+                    current_r = actual_r # The actual row where the mark would land
                 
                 if temp_board[current_r][current_c] == EMPTY_CELL:
                     # Make the move on the temporary board for simulation
@@ -861,7 +858,7 @@ class TwistedTicTacToeStreamlit:
                             continue
                         current_r = actual_r
 
-                    if temp_board[current_r][c_iter] == EMPTY_CELL:
+                    if temp_board[current_r][current_c] == EMPTY_CELL:
                         temp_board[current_r][c_iter] = PLAYER_X # Make the move
                         if st.session_state.selected_twists["Evolve Tic-Tac-Toe"]:
                             temp_evolve_marks[(current_r, c_iter)] = temp_evolve_marks.get((current_r, c_iter), 0) + 1
